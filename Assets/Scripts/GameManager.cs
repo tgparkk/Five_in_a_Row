@@ -4,6 +4,10 @@ using UnityEngine.UI;
 public class GameManager : MonoBehaviour
 {
     public BoardManager boardManager;
+    public GameObject blackStonePrefab;
+    public GameObject whiteStonePrefab;
+    private bool isBlackTurn = true;
+    
     public Text statusText;
 
     private bool isGameOver = false;
@@ -27,6 +31,20 @@ public class GameManager : MonoBehaviour
         {
             string next = player == 1 ? "백돌" : "흑돌";
             statusText.text = $"{next} 차례입니다";
+        }
+    }
+    
+    void Update()
+    {
+        if (Input.GetMouseButtonDown(0))
+        {
+            Vector3 worldPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+            worldPos.z = 0f;
+
+            GameObject prefab = isBlackTurn ? blackStonePrefab : whiteStonePrefab;
+            Instantiate(prefab, worldPos, Quaternion.identity);
+
+            isBlackTurn = !isBlackTurn;
         }
     }
 
