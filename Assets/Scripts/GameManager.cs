@@ -38,15 +38,22 @@ public class GameManager : MonoBehaviour
     {
         if (Input.GetMouseButtonDown(0))
         {
-            Vector3 worldPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-            worldPos.z = 0f;
+            // 화면 → 월드 좌표
+            Vector2 worldPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
 
-            GameObject prefab = isBlackTurn ? blackStonePrefab : whiteStonePrefab;
-            Instantiate(prefab, worldPos, Quaternion.identity);
+            // 월드 좌표 → 격자 좌표
+            Vector2Int gridPos = boardManager.WorldToGrid(worldPos);
 
-            isBlackTurn = !isBlackTurn;
+            // 범위 체크 & 빈 칸 확인
+            if (boardManager.IsValid(gridPos) && boardManager.GetBoardValue(gridPos) == 0)
+            {
+                // 격자 좌표 → 정확한 월드 좌표로 돌 생성
+                boardManager.PlaceStone(gridPos);
+                Debug.Log($"Placed stone at {gridPos.x}, {gridPos.y}");
+            }
         }
     }
+
 
     bool CheckWin(Vector2Int pos, int player)
     {
