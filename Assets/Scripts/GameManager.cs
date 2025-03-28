@@ -4,14 +4,17 @@ using UnityEngine.UI;
 public class GameManager : MonoBehaviour
 {
     public BoardManager boardManager;
+    public Button restartButton; // 선택: Inspector에서 재시작 버튼 연결
+    
     public GameObject blackStonePrefab;
     public GameObject whiteStonePrefab;
     private bool isBlackTurn = true;
     
-    public Text statusText;
+    //public Text statusText;
 
     private bool isGameOver = false;
-
+    public UnityEngine.UI.Text statusText; // 승리 메시지 등 표시할 UI Text
+    
     void Start()
     {
         statusText.text = "흑돌 차례입니다";
@@ -26,6 +29,7 @@ public class GameManager : MonoBehaviour
             isGameOver = true;
             string winner = player == 1 ? "흑돌" : "백돌";
             statusText.text = $"{winner} 승리!";
+            GameOver(player);
         }
         else
         {
@@ -55,39 +59,66 @@ public class GameManager : MonoBehaviour
     }
 
 
+    // 승리 조건 체크 함수
     bool CheckWin(Vector2Int pos, int player)
     {
+        // 4가지 방향: 가로, 세로, 두 대각선
         Vector2Int[] directions = {
-            new Vector2Int(1, 0),   // 가로
-            new Vector2Int(0, 1),   // 세로
-            new Vector2Int(1, 1),   // 대각 ↘
-            new Vector2Int(1, -1)   // 대각 ↗
+            new Vector2Int(1, 0),
+            new Vector2Int(0, 1),
+            new Vector2Int(1, 1),
+            new Vector2Int(1, -1)
         };
 
         foreach (Vector2Int dir in directions)
         {
             int count = 1;
-            count += CountDirection(pos, dir, player);
-            count += CountDirection(pos, -dir, player);
+            // 한쪽 방향
+            count += CountStonesInDirection(pos, dir, player);
+            // 반대 방향
+            count += CountStonesInDirection(pos, -dir, player);
 
             if (count >= 5)
                 return true;
         }
-
         return false;
     }
 
-    int CountDirection(Vector2Int start, Vector2Int dir, int player)
+    // 특정 방향으로 연속된 돌의 수를 세는 함수
+    int CountStonesInDirection(Vector2Int start, Vector2Int dir, int player)
     {
         int count = 0;
         Vector2Int pos = start + dir;
-
         while (boardManager.IsValid(pos) && boardManager.GetBoardValue(pos) == player)
         {
             count++;
             pos += dir;
         }
-
         return count;
     }
+
+    // 게임 종료 이벤트 처리 함수
+    void GameOver(int winningPlayer)
+    {
+        string winner = winningPlayer == 1 ? "흑돌" : "백돌";
+
+        // 1. 승리 메시지 표시
+        if (statusText != null)
+            statusText.text = winner + " 승리!";
+
+        // 2. 게임 진행 중단 (예: 입력 막기)
+        // 방법 1: GameManager 스스로 비활성화
+        this.enabled = false;
+
+        // 방법 2: BoardManager에서 클릭 비활성화
+        if (boardManager != null)
+            boardManager.enabled = false;
+
+        // 3. 선택: 게임 재시작 버튼 활성화
+        if (restartButton != null)
+            restartButton.gameObject.SetActive(true);
+
+        Debug.Log($"{winner} 승리! 게임 종료");
+    }
+    
 }
