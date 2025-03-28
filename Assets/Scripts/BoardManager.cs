@@ -11,9 +11,13 @@ public class BoardManager : MonoBehaviour
 
     private int[,] board;                            // 0 = 빈칸, 1 = 흑돌, 2 = 백돌
     private bool isBlackTurn = true;                 // 턴 관리
+    public GameManager gameManager; // GameManager 참조
 
     void Awake()
     {
+        if (gameManager == null)
+            gameManager = FindObjectOfType<GameManager>();
+        
         var sr = GetComponent<SpriteRenderer>();
         Vector2 boardWorldSize = sr.bounds.size;
 
@@ -69,8 +73,13 @@ public class BoardManager : MonoBehaviour
         Vector3 spawnPos = GridToWorld(gridPos);
         Instantiate(prefab, spawnPos, Quaternion.identity);
 
+        // GameManager에게 전달 (현재 턴의 플레이어가 돌을 놓았다는 의미)
+        gameManager.OnStonePlaced(stoneType, gridPos);
+
+        // 턴 전환은 마지막에!
         isBlackTurn = !isBlackTurn;
     }
+
 
     
     public bool IsValid(Vector2Int pos)
