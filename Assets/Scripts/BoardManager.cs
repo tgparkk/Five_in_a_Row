@@ -11,6 +11,7 @@ public class BoardManager : MonoBehaviour
 
     private int[,] board;                            // 0 = 빈칸, 1 = 흑돌, 2 = 백돌
     private bool isBlackTurn = true;                 // 턴 관리
+    
     public GameManager gameManager; // GameManager 참조
 
     void Awake()
