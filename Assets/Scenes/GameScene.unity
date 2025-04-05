@@ -369,6 +369,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   gameSceneName: GameScene
+  vsPlayerButton: {fileID: 0}
+  vsAIButton: {fileID: 0}
 --- !u!1 &478143986
 GameObject:
   m_ObjectHideFlags: 0
@@ -381,7 +383,7 @@ GameObject:
   - component: {fileID: 478143989}
   - component: {fileID: 478143988}
   m_Layer: 5
-  m_Name: TurnText
+  m_Name: Text_Turn
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1089,6 +1091,7 @@ MonoBehaviour:
   boardSize: 15
   blackStonePrefab: {fileID: 5968879880712185136, guid: 5ff68af2bef2eb042ab0596693744785, type: 3}
   whiteStonePrefab: {fileID: 2493468431867236553, guid: b7593eed7805792489b8a16bd01ba0b8, type: 3}
+  gameOver: 0
   gameManager: {fileID: 0}
 --- !u!114 &844465925
 MonoBehaviour:
@@ -1103,6 +1106,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   gameSceneName: GameScene
+  vsPlayerButton: {fileID: 0}
+  vsAIButton: {fileID: 0}
 --- !u!1 &1157044452
 GameObject:
   m_ObjectHideFlags: 0
@@ -1170,6 +1175,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   gameSceneName: GameScene
+  vsPlayerButton: {fileID: 0}
+  vsAIButton: {fileID: 0}
 --- !u!1 &1175649348
 GameObject:
   m_ObjectHideFlags: 0
@@ -1215,6 +1222,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   gameSceneName: GameScene
+  vsPlayerButton: {fileID: 0}
+  vsAIButton: {fileID: 0}
 --- !u!1 &1428884529
 GameObject:
   m_ObjectHideFlags: 0
@@ -1542,7 +1551,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 100}
   m_SizeDelta: {x: 160, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1997263413

@@ -4,35 +4,52 @@ using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
+    public static GameManager Instance;
+
     public BoardManager boardManager;
-    public Button restartButton; // 선택: Inspector에서 재시작 버튼 연결
+    public Button restartButton;
     
     public GameObject blackStonePrefab;
     public GameObject whiteStonePrefab;
     private bool isBlackTurn = true;
     
-    public UnityEngine.UI.Text statusText; // 승리 메시지 등 표시할 UI Text
+    public UnityEngine.UI.Text statusText;
     
-    // AI related fields
     [Header("AI Settings")]
-    public bool useAI = true; // 기본값은 true, 시작 시 UIManager 설정으로 덮어씌워짐
+    public bool useAI = true;
     public bool aiPlaysBlack = false;
     private AIPlayer aiPlayer;
-    private float aiMoveDelay = 0.5f; // Delay before AI makes a move
+    private float aiMoveDelay = 0.5f;
     private float aiMoveTimer = 0f;
     private bool aiThinking = false;
     
     private bool isGameOver = false;
     
     [Header("Victory UI")]
-    public GameObject victoryPanel;     // 승리 패널
-    public Text victoryText;            // 승리 메시지 텍스트
+    public GameObject victoryPanel;
+    public Text victoryText;
 
+    private void Awake()
+    {
+        // 싱글톤 패턴 구현 (씬 전환 후에도 참조 가능)
+        if (Instance == null)
+        {
+            Instance = this;
+        }
+        else if (Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+    }
     
     void Start()
     {
-        // UIManager의 모드 설정 적용 (사람 vs 사람 또는 사람 vs AI)
+        // UIManager의 모드 설정 적용
         useAI = UIManager.vsAIMode;
+        
+        // 게임 시작 시 초기 상태 설정
+        isGameOver = false;
         
         // Initialize board manager if not set
         if (boardManager == null)
@@ -44,7 +61,6 @@ public class GameManager : MonoBehaviour
             int aiStoneType = aiPlaysBlack ? 1 : 2;
             aiPlayer = new AIPlayer(boardManager, aiStoneType, boardManager.boardSize);
             
-            // If AI plays first (black), make its first move
             if (aiPlaysBlack && isBlackTurn)
             {
                 aiThinking = true;
@@ -56,6 +72,19 @@ public class GameManager : MonoBehaviour
         else
         {
             statusText.text = "흑돌 차례입니다";
+        }
+        
+        // 승리 패널 비활성화
+        if (victoryPanel != null)
+        {
+            victoryPanel.SetActive(false);
+        }
+        
+        // 재시작 버튼에 리스너 추가
+        if (restartButton != null)
+        {
+            restartButton.onClick.RemoveAllListeners();
+            restartButton.onClick.AddListener(RestartGame);
         }
     }
 
@@ -83,10 +112,8 @@ public class GameManager : MonoBehaviour
         }
         else
         {
-            // 이제 턴 변경
             isBlackTurn = !isBlackTurn;
         
-            // 다음 턴 메시지 업데이트
             if (useAI)
             {
                 bool isNextAI = (aiPlaysBlack && isBlackTurn) || (!aiPlaysBlack && !isBlackTurn);
@@ -94,7 +121,6 @@ public class GameManager : MonoBehaviour
                 string nextColorText = isBlackTurn ? "흑돌" : "백돌";
                 statusText.text = $"{nextPlayerText}({nextColorText}) 차례입니다";
             
-                // AI 턴이면 AI 생각 시작
                 if (isNextAI)
                 {
                     aiThinking = true;
@@ -111,40 +137,17 @@ public class GameManager : MonoBehaviour
     
     void Update()
     {
+        // 게임이 종료되었으면 AI 행동 중지
+        if (isGameOver) return;
+        
         // AI's turn
-        if (useAI && aiThinking && !isGameOver)
+        if (useAI && aiThinking)
         {
             aiMoveTimer -= Time.deltaTime;
             if (aiMoveTimer <= 0)
             {
                 aiThinking = false;
                 MakeAIMove();
-            }
-        }
-    
-        // Player's turn
-        else if (!aiThinking && !isGameOver)
-        {
-            // 이 부분이 수정된 부분입니다
-            bool isPlayerTurn = !useAI || 
-                                (aiPlaysBlack && !isBlackTurn) || 
-                                (!aiPlaysBlack && isBlackTurn);
-            
-            if (isPlayerTurn && Input.GetMouseButtonDown(0))
-            {
-                // 화면 → 월드 좌표
-                Vector2 worldPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-
-                // 월드 좌표 → 격자 좌표
-                Vector2Int gridPos = boardManager.WorldToGrid(worldPos);
-
-                // 범위 체크 & 빈 칸 확인
-                if (boardManager.IsValid(gridPos) && boardManager.GetBoardValue(gridPos) == 0)
-                {
-                    // 격자 좌표 → 정확한 월드 좌표로 돌 생성
-                    boardManager.PlaceStone(gridPos);
-                    Debug.Log($"Placed stone at {gridPos.x}, {gridPos.y}");
-                }
             }
         }
     }
@@ -157,14 +160,12 @@ public class GameManager : MonoBehaviour
         if (boardManager.IsValid(aiMove) && boardManager.GetBoardValue(aiMove) == 0)
         {
             boardManager.PlaceStone(aiMove);
-            Debug.Log($"AI placed stone at {aiMove.x}, {aiMove.y}");
         }
     }
 
     // 승리 조건 체크 함수
     bool CheckWin(Vector2Int pos, int player)
     {
-        // 4가지 방향: 가로, 세로, 두 대각선
         Vector2Int[] directions = {
             new Vector2Int(1, 0),
             new Vector2Int(0, 1),
@@ -175,9 +176,7 @@ public class GameManager : MonoBehaviour
         foreach (Vector2Int dir in directions)
         {
             int count = 1;
-            // 한쪽 방향
             count += CountStonesInDirection(pos, dir, player);
-            // 반대 방향
             count += CountStonesInDirection(pos, -dir, player);
 
             if (count >= 5)
@@ -186,7 +185,6 @@ public class GameManager : MonoBehaviour
         return false;
     }
 
-    // 특정 방향으로 연속된 돌의 수를 세는 함수
     int CountStonesInDirection(Vector2Int start, Vector2Int dir, int player)
     {
         int count = 0;
@@ -199,8 +197,6 @@ public class GameManager : MonoBehaviour
         return count;
     }
     
-    
-    // 게임 종료 이벤트 처리 함수
     void GameOver(int winningPlayer)
     {
         string winner;
@@ -215,6 +211,9 @@ public class GameManager : MonoBehaviour
             winner = winningPlayer == 1 ? "흑돌" : "백돌";
         }
 
+        // 게임 종료 상태 설정
+        isGameOver = true;
+        
         // 승리 메시지 표시
         if (statusText != null)
             statusText.text = winner + " 승리!";
@@ -229,12 +228,9 @@ public class GameManager : MonoBehaviour
                 victoryText.text = winner + " 승리!";
         }
 
-        // 게임 진행 중단
-        aiThinking = false;
-        
-        // BoardManager에서 클릭 비활성화
+        // BoardManager도 게임 종료 상태로 설정
         if (boardManager != null)
-            boardManager.enabled = false;
+            boardManager.gameOver = true;
 
         Debug.Log($"{winner} 승리! 게임 종료");
     }
@@ -242,12 +238,12 @@ public class GameManager : MonoBehaviour
     // 게임 재시작 함수
     public void RestartGame()
     {
-        Debug.Log("Restart button clicked"); // 디버그 로그 추가
-    
-        // 현재 씬 이름을 직접 사용
+        Debug.Log("Restart button clicked - GameManager");
+        
+        // 현재 씬 이름을 직접 가져와서 다시 로드
         string currentSceneName = SceneManager.GetActiveScene().name;
-        Debug.Log("Current scene: " + currentSceneName);
-    
+        Debug.Log("Reloading scene: " + currentSceneName);
+        
         // 씬 다시 로드
         SceneManager.LoadScene(currentSceneName);
     }
@@ -255,6 +251,7 @@ public class GameManager : MonoBehaviour
     // 메인 메뉴로 돌아가는 함수
     public void ReturnToMainMenu()
     {
+        Debug.Log("Return to main menu clicked");
         SceneManager.LoadScene("OpeningScene");
     }
 }
